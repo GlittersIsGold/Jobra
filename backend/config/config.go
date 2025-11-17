@@ -1,48 +1,60 @@
 package config
 
 import (
-	"os"
-	"log"
 	"flag"
+	"fmt"
+	"log"
+	"os"
+	"strings"
 )
 
 type Config struct {
-	Port        	 string
-	Environment 	 string
-	
-	DatabaseURL      string
-	
-	JWTSecret   	 string
-	JWTExpireHours   string 
+	Type string
 
-	TrustedProxies	 string
+	Environment    string
+	Port           string
+	TrustedProxies []string
+	DatabaseURL    string
+
+	JWTSecret      string
+	JWTExpireHours int
 }
 
 var (
-	portFlag           = flag.String("port", "8000", "Server port")
-	configFlag         = flag.String("conf", "", "Name of the configuration file")
-	envFlag            = flag.String("env", "", "Project environment mode (development or production)")
-	dbURLFlag          = flag.String("db-url", "", "Database connection string url")
-	jwtSecretFlag      = flag.String("jwt-secret", "", "Auth JWT secret key")
-	jwtExpiryFlag      = flag.Int("jwt-expiry", 0, "JWT expire time in hours")
-	trustedProxiesFlag = flag.String("trusted-proxies", "", "Enumeration of gin trusted proxies")
+	configFlag         = flag.String("configuration", "none", "Configuration mode (none|os-vars|env)")
+	portFlag           = flag.Int("port", 8000, "Server port, 8000 by default, integer")
+	envFlag            = flag.String("environment", "development", "Project environment mode (development|production)")
+	dbUrlFlag          = flag.String("db-url", "postgresql://username:password@localhost:5432/jobra?sslmode=disable", "Database connection url, string")
+	jwtSecretFlag      = flag.String("jwt-secret", "your-super-secret-jwt-key-change-in-production", "Auth JWT secret key, string")
+	jwtExpiryFlag      = flag.Int("jwt-expire-hours", 1, "JWT expire time in hours, integer")
+	trustedProxiesFlag = flag.String("trusted-proxies", "127.0.0.1,::1", "Enumeration of gin trusted proxies, as comma-sep string")
 )
 
-func Load() *Config {
+func Load() (Config, error) {
+	logConfig()
 
-	flag.Parse()
+	var config Config
+	var err error
 
-	return &Config{
-		Port:           getEnv("PORT", "8081"),
-		Environment: 	getEnv("ENVIRONMENT", "developmend"),
-		
-		DatabaseURL: 	getEnv("DATABASE_URL", "postgresql://postgres:password@localhost:5432/jobra?sslmode=disable"),
-		
-		JWTSecret: 		getEnv("JWT_SECRET", "your-super-secret-jwt-key-change-in-production"),
-		JWTExpireHours: getEnv("JWT_EXPIRY_HOURS", "24"), 
-
-		TrustedProxies: getEnv("CORS_ALLOWED_ORIGINS", "*"),
+	switch *configFlag {
+	case "none":
+		log.Println("none configuration mode selected, retreiving configuration params from cli")
+		config, err = ParseCliParams()
+	case "os-var":
+		log.Println("os-vars configuration mode selected, retreivn configuration params from OS variables")
+		config, err = ParseOsVars()
+	case "env":
+		log.Println("env configuration mode selected, retreiving configuration params from .env")
+		config, err = ParseEnv()
+	default:
+		log.Println("configuration flag is incorrect")
 	}
+
+	if err != nil {
+		return Config{}, fmt.Errorf("failed to load config: %w", err)
+	}
+
+	return config, nil
 }
 
 func getEnv(key, defaultValue string) string {
@@ -52,12 +64,26 @@ func getEnv(key, defaultValue string) string {
 	return defaultValue
 }
 
-func logConfig(cfg *Config) {
+func logConfig() {
 	log.Println("=== Loaded Configuration ===")
-	log.Printf("Port: %s", cfg.Port)
-	log.Printf("Environment: %s", cfg.Environment)
-	log.Printf("Database URL: %s", cfg.DatabaseURL)
-	log.Printf("JWT Expiry: %d hours", cfg.JWTExpireHours)
-	log.Printf("CORS Origins: %s", cfg.TrustedProxies)
+	log.Printf("Configuration: %s", *configFlag)
+	log.Printf("Port: %d", *portFlag)
+	log.Printf("Environment: %s", *envFlag)
+	log.Printf("Database URL: %s", *dbUrlFlag)
+	log.Printf("JWT secret: %s", *jwtSecretFlag)
+	log.Printf("JWT: %d hour(s)", *jwtExpiryFlag)
+	log.Printf("Trusted proxies: %#v\n", strings.Split(*trustedProxiesFlag, ","))
 	log.Println("============================")
+}
+
+func ParseCliParams() (Config, error) {
+	return Config, error
+}
+
+func ParseOsVars() (Config, error) {
+	return Config, error
+}
+
+func ParseEnv() (Config, error) {
+	return Config, error
 }

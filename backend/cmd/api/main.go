@@ -1,33 +1,29 @@
 package main
 
 import (
-//   "net/http"
-	"fmt"
 	"backend/config"
-//   "github.com/gin-gonic/gin"
+	"github.com/gin-gonic/gin"
+	"log"
+	"net/http"
 )
 
 func main() {
+	config, err := config.Load()
+	if err != nil {
+		log.Fatal(err)
+	}
 
-	cfg := config.Load()
-	
-	fmt.Printf("Port: %s\n", cfg.Port)
-	fmt.Printf("Environment: %s\n", cfg.Environment) 
-	fmt.Printf("Database URL: %s\n", cfg.DatabaseURL)
-	fmt.Printf("JWT Expiry: %d hours\n", cfg.JWTExpireHours)
+	r := gin.Default()
 
-	//   // Create a Gin router with default middleware (logger and recovery)
-//   r := gin.Default()
+	r.SetTrustedProxies(config.TrustedProxies)
 
-//   // Define a simple GET endpoint
-//   r.GET("/ping", func(c *gin.Context) {
-//     // Return JSON response
-//     c.JSON(http.StatusOK, gin.H{
-//       "message": "pong",
-//     })
-//   })
+	gin.SetMode(config.Environment)
 
-//   // Start server on port 8080 (default)
-//   // Server will listen on 0.0.0.0:8080 (localhost:8080 on Windows)
-//   r.Run()
+	r.GET("/ping", func(c *gin.Context) {
+		c.JSON(http.StatusOK, gin.H{
+			"message": "pong",
+		})
+	})
+
+	r.Run(config.Port)
 }
