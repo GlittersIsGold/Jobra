@@ -14,7 +14,7 @@ import (
 type Config struct {
 	Type 		   string	`validate:"required,oneof=cli os-vars env"`
 
-	Environment    string	`validate:"required,oneof=development production"`
+	Environment    string	`validate:"required,oneof=debug release test"`
 	Port           string	`validate:"required,min=1,max=65535"`
 	TrustedProxies []string `validate:"dive,ip"`
 	DatabaseURL    string	`validate:"required,url"`
@@ -26,7 +26,7 @@ type Config struct {
 var (
 	typeFlag           = flag.String("configuration", "cli", "Configuration mode defines the way to take application work params (cli|os-vars|env)")
 	portFlag           = flag.Int("port", 8000, "Server port, 8000 by default, integer")
-	envFlag            = flag.String("environment", "development", "Project environment mode (development|production)")
+	envFlag            = flag.String("environment", "debug", "Project environment mode (development|production)")
 	dbUrlFlag          = flag.String("db-url", "postgresql://username:password@localhost:5432/jobra?sslmode=disable", "Database connection url, string")
 	jwtSecretFlag      = flag.String("jwt-secret", "your-super-secret-jwt-key-change-in-production", "Auth JWT secret key, string")
 	jwtExpireFlag      = flag.Int("jwt-expire-hours", 1, "JWT expire time in hours, integer")
@@ -34,6 +34,12 @@ var (
 )
 
 func Load() (Config, error) {
+    if config, ok, err := CheckOsVars(); ok {
+        return config, err
+    } else if err != nil {
+        return Config{}, err
+    }
+
 	logConfig()
 
 	var config *Config
@@ -67,6 +73,22 @@ func logConfig() {
 	log.Printf("JWT: %d hour(s)", *jwtExpireFlag)
 	log.Printf("Trusted proxies: %#v\n", strings.Split(*trustedProxiesFlag, ","))
 	log.Println("============================")
+}
+
+func CheckOsVars() (Config, bool, error) {
+    configEnv := os.Getenv("CONFIGURATION")
+    
+    if configEnv != "os-vars" {
+        return Config{}, false, nil
+    }
+    
+    log.Println("Using configuration from environment variable: os-vars")
+    config, err := ParseOsVars()
+    if err != nil {
+        return Config{}, true, fmt.Errorf("failed to load config from os-vars: %w", err)
+    }
+    
+    return *config, true, nil
 }
 
 var validate = validator.New()
@@ -112,7 +134,7 @@ func ParseOsVars() (*Config, error) {
 
 	config := &Config{
         Type:           getEnv("CONFIGURATION", "os-vars"),
-        Environment:    getEnv("ENVIRONMENT", "development"),
+        Environment:    getEnv("ENVIRONMENT", "debug"),
         Port:           strconv.Itoa(port), 
         TrustedProxies: strings.Split(getEnv("TRUSTED_PROXIES", "127.0.0.1,::1"), ","),
         DatabaseURL:    getEnv("DATABASE_URL", "postgresql://username:password@localhost:5432/jobra?sslmode=disable"),
