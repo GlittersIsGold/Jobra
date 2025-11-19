@@ -81,7 +81,7 @@ func ParseCliParams() (*Config, error) {
 	config := &Config{
 		Type:           *typeFlag,
 		Environment:    *envFlag,
-		Port:           strconv.Itoa(*portFlag),
+		Port:           ":" + strconv.Itoa(*portFlag),
 		TrustedProxies: strings.Split(*trustedProxiesFlag, ","),
 		DatabaseURL:    *dbUrlFlag,
 		JWTSecret:      *jwtSecretFlag,
@@ -113,7 +113,7 @@ func ParseOsVars() (*Config, error) {
 	config := &Config{
 		Type:           getEnv("CONFIGURATION", "os-vars"),
 		Environment:    getEnv("ENVIRONMENT", "debug"),
-		Port:           strconv.Itoa(port),
+		Port:           ":" + strconv.Itoa(port),
 		TrustedProxies: strings.Split(getEnv("TRUSTED_PROXIES", "127.0.0.1,::1"), ","),
 		DatabaseURL:    getEnv("DATABASE_URL", "postgresql://username:password@localhost:5432/jobra?sslmode=disable"),
 		JWTSecret:      getEnv("JWT_SECRET", "your-super-secret-jwt-key-change-in-production"),
@@ -163,7 +163,7 @@ func ParseEnv() (*Config, error) {
 	config := &Config{
 		Type:           envVars["CONFIGURATION"],
 		Environment:    envVars["ENVIRONMENT"],
-		Port:           strconv.Itoa(port),
+		Port:           ":" + strconv.Itoa(port),
 		TrustedProxies: strings.Split(envVars["TRUSTED_PROXIES"], ","),
 		DatabaseURL:    envVars["DATABASE_URL"],
 		JWTSecret:      envVars["JWT_SECRET"],
