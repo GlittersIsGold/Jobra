@@ -1,6 +1,7 @@
 'use client';
 
 import { AuthService } from '@/lib/auth';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 
 export default function Header() {
@@ -15,7 +16,7 @@ export default function Header() {
   return (
     <header className="bg-blue-600 text-white shadow-lg">
       <div className="container mx-auto px-4 py-4 flex justify-between items-center">
-        <h1 className="text-xl font-bold">Джобра</h1>
+        <Link href="/" className="text-xl font-bold">Джобра</Link>
         
         <nav>
           <ul className="flex space-x-4 items-center">
