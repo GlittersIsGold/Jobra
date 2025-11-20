@@ -1,0 +1,75 @@
+import { LoginRequest, RegisterRequest, AuthResponse, User } from '@/types/auth';
+
+const API_BASE_URL = 'http://localhost:8080';
+
+export class AuthService {
+  static async login(credentials: LoginRequest): Promise<AuthResponse> {
+    const response = await fetch(`${API_BASE_URL}/login`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(credentials),
+    });
+
+    if (!response.ok) {
+      throw new Error('Login failed');
+    }
+
+    return response.json();
+  }
+
+  static async register(userData: RegisterRequest): Promise<AuthResponse> {
+    const response = await fetch(`${API_BASE_URL}/register`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(userData),
+    });
+
+    if (!response.ok) {
+      throw new Error('Registration failed');
+    }
+
+    return response.json();
+  }
+
+  static async getProfile(token: string): Promise<{ user: User }> {
+    const response = await fetch(`${API_BASE_URL}/api/profile`, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to fetch profile');
+    }
+
+    return response.json();
+  }
+
+  static saveToken(token: string): void {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('jwt_token', token);
+    }
+  }
+
+  static getToken(): string | null {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('jwt_token');
+    }
+    return null;
+  }
+
+  static removeToken(): void {
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('jwt_token');
+    }
+  }
+
+  static isAuthenticated(): boolean {
+    return this.getToken() !== null;
+  }
+}
