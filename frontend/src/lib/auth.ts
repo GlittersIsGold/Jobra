@@ -1,6 +1,6 @@
 import { LoginRequest, RegisterRequest, AuthResponse, User } from '@/types/auth';
 
-const API_BASE_URL = 'http://localhost:8080';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
 
 export class AuthService {
   static async login(credentials: LoginRequest): Promise<AuthResponse> {
@@ -20,9 +20,6 @@ export class AuthService {
   }
 
   static async register(userData: RegisterRequest): Promise<AuthResponse> {
-    console.log('Sending registration request to:', `${API_BASE_URL}/register`);
-    console.log('Request data:', userData);
-
     const response = await fetch(`${API_BASE_URL}/register`, {
       method: 'POST',
       headers: {
@@ -31,17 +28,12 @@ export class AuthService {
       body: JSON.stringify(userData),
     });
 
-    console.log('Response status:', response.status);
-    
     if (!response.ok) {
       const errorText = await response.text();
-      console.error('Registration error response:', errorText);
       throw new Error(`Registration failed: ${response.status} - ${errorText}`);
     }
 
-    const result = await response.json();
-    console.log('Registration success:', result);
-    return result;
+    return response.json();
   }
 
   static async getProfile(token: string): Promise<{ user: User }> {
