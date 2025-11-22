@@ -1,35 +1,47 @@
 package main
 
 import (
+	"context"
 	"log"
 	"net/http"
+	"time"
 
 	"backend/config"
 	"backend/internal/auth"
 	"backend/internal/handlers"
-	"backend/internal/repository"
+	"backend/internal/repository/postgres"
 
 	"github.com/gin-gonic/gin"
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 func main() {
 	cfg := config.Load()
 
+	pool, err := pgxpool.New(context.Background(), cfg.Database.URL)
+	if err != nil {
+		log.Fatalf("Unable to connect to database: %v", err)
+	}
+	defer pool.Close()
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	if err := pool.Ping(ctx); err != nil {
+		log.Fatalf("Unable to ping database: %v", err)
+	}
+
 	if cfg.Server.Environment == "production" {
 		gin.SetMode(gin.ReleaseMode)
 	}
 
-	userRepo := repository.NewInMemoryUserRepository()
+	userRepo := postgres.NewUserRepository(pool)
 
 	jwtManager := auth.NewJWTManager(cfg.JWT.SecretKey, cfg.JWT.ExpiresIn)
-
 	authService := auth.NewAuthService(userRepo, jwtManager)
-
 	authHandler := handlers.NewAuthHandler(authService)
 	userHandler := handlers.NewUserHandler(userRepo)
 
 	router := gin.New()
-
 	router.SetTrustedProxies(cfg.Proxy.TrustedProxies)
 
 	router.Use(gin.Logger())
