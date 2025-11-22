@@ -14,13 +14,31 @@ export default function RegisterPage() {
   const handleRegister = async (userData: RegisterRequest) => {
     setLoading(true);
     setError('');
-
+  
     try {
       const response = await AuthService.register(userData);
       AuthService.saveToken(response.token!);
       router.push('/profile');
     } catch (err) {
-      setError('Ошибка регистрации. Попробуйте другой username или email.');
+      console.error('Registration error:', err);
+      
+      if (err instanceof Error) {
+        if (err.message.includes('min') || err.message.includes('Password')) {
+          setError('Пароль должен содержать минимум 6 символов');
+        } else if (err.message.includes('Username') || err.message.includes('username')) {
+          setError('Логин должен содержать минимум 3 символа');
+        } else if (err.message.includes('email') || err.message.includes('Email')) {
+          setError('Введите корректный email адрес');
+        } else if (err.message.includes('409') || err.message.includes('Conflict')) {
+          setError('Пользователь с таким именем или email уже существует');
+        } else if (err.message.includes('400') || err.message.includes('validation')) {
+          setError('Проверьте правильность введенных данных');
+        } else {
+          setError('Ошибка регистрации. Попробуйте позже.');
+        }
+      } else {
+        setError('Неизвестная ошибка');
+      }
     } finally {
       setLoading(false);
     }

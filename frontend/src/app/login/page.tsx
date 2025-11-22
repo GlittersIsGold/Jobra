@@ -20,6 +20,7 @@ export default function LoginPage() {
       AuthService.saveToken(response.token!);
       router.push('/profile');
     } catch (err) {
+      console.error('Login error:', err);
       setError('Ошибка входа. Проверьте правильность данных.');
     } finally {
       setLoading(false);
