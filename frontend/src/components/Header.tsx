@@ -1,22 +1,28 @@
 'use client';
 
-import { AuthService } from '@/lib/auth';
-import Link from 'next/link';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 
 export default function Header() {
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const router = useRouter();
-  const isAuthenticated = AuthService.isAuthenticated();
+
+  useEffect(() => {
+    // Проверяем аутентификацию только на клиенте
+    const token = localStorage.getItem('jwt_token');
+    setIsAuthenticated(!!token);
+  }, []);
 
   const handleLogout = () => {
-    AuthService.removeToken();
+    localStorage.removeItem('jwt_token');
+    setIsAuthenticated(false);
     router.push('/login');
   };
 
   return (
     <header className="bg-blue-600 text-white shadow-lg">
       <div className="container mx-auto px-4 py-4 flex justify-between items-center">
-        <Link href="/" className="text-xl font-bold">Джобра</Link>
+        <h1 className="text-xl font-bold">My App</h1>
         
         <nav>
           <ul className="flex space-x-4 items-center">

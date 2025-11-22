@@ -1,8 +1,15 @@
+'use client';
+
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { AuthService } from '@/lib/auth';
 
 export default function Home() {
-  const isAuthenticated = AuthService.isAuthenticated();
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+
+  useEffect(() => {
+    const token = localStorage.getItem('jwt_token');
+    setIsAuthenticated(!!token);
+  }, []);
 
   return (
     <div className="min-h-screen bg-gray-100">
@@ -33,8 +40,6 @@ export default function Home() {
               >
                 Войти
               </Link>
-              <br/>
-              <br/>
               <Link
                 href="/register"
                 className="bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700"
