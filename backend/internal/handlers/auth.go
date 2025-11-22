@@ -19,7 +19,6 @@ func NewAuthHandler(authService *auth.AuthService) *AuthHandler {
 	}
 }
 
-// Register обрабатывает регистрацию пользователя
 func (h *AuthHandler) Register(c *gin.Context) {
 	var req models.RegisterRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -47,7 +46,6 @@ func (h *AuthHandler) Register(c *gin.Context) {
 	})
 }
 
-// Login обрабатывает аутентификацию пользователя
 func (h *AuthHandler) Login(c *gin.Context) {
 	var req models.LoginRequest
 	if err := c.ShouldBindJSON(&req); err != nil {

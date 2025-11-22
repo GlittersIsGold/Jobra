@@ -35,7 +35,6 @@ func (r *inMemoryUserRepository) Create(user *models.User) error {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 
-	// Проверяем уникальность username и email
 	for _, u := range r.users {
 		if u.Username == user.Username {
 			return ErrUserExists

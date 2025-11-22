@@ -3,7 +3,6 @@
 import { useState } from 'react';
 import { LoginRequest, RegisterRequest } from '@/types/auth';
 
-// Раздельные пропсы для лучшей типизации
 type LoginFormProps = {
   type: 'login';
   onSubmit: (data: LoginRequest) => void;
@@ -45,7 +44,6 @@ export default function AuthForm(props: AuthFormProps) {
     }
   };
 
-  // Остальной код компонента остается таким же...
   return (
     <div className="max-w-md mx-auto mt-8 p-6 bg-white rounded-lg shadow-md">
       <h2 className="text-2xl font-bold mb-6 text-center">
