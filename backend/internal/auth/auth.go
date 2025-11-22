@@ -2,26 +2,21 @@ package auth
 
 import (
 	"backend/internal/models"
+	"backend/internal/repository"
 	"errors"
 )
 
 var (
-	ErrUserExists   = errors.New("user already exists")
+	ErrUserExists         = errors.New("user already exists")
 	ErrInvalidCredentials = errors.New("invalid credentials")
 )
 
 type AuthService struct {
-	userRepo   UserRepository
+	userRepo   repository.UserRepository
 	jwtManager *JWTManager
 }
 
-type UserRepository interface {
-	FindByUsername(username string) (*models.User, error)
-	FindByEmail(email string) (*models.User, error)
-	Create(user *models.User) error
-}
-
-func NewAuthService(userRepo UserRepository, jwtManager *JWTManager) *AuthService {
+func NewAuthService(userRepo repository.UserRepository, jwtManager *JWTManager) *AuthService {
 	return &AuthService{
 		userRepo:   userRepo,
 		jwtManager: jwtManager,
@@ -56,10 +51,9 @@ func (s *AuthService) Register(req *models.RegisterRequest) (*models.User, error
 	}
 
 	user := &models.User{
-		ID:       generateID(),
-		Username: req.Username,
-		Email:    req.Email,
-		Password: req.Password,
+		Username:     req.Username,
+		Email:        req.Email,
+		PasswordHash: req.Password, 
 	}
 
 	if err := user.HashPassword(); err != nil {
@@ -71,8 +65,4 @@ func (s *AuthService) Register(req *models.RegisterRequest) (*models.User, error
 	}
 
 	return user, nil
-}
-
-func generateID() string {
-	return "user-" + string(rune(len("temp")))
 }
