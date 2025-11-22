@@ -13,15 +13,15 @@ type Config struct {
 }
 
 type ServerConfig struct {
-	Port         string
-	Environment  string
-	ReadTimeout  time.Duration
+	Port        string
+	Environment string
+	ReadTimeout time.Duration
 	WriteTimeout time.Duration
-	IdleTimeout  time.Duration
+	IdleTimeout time.Duration
 }
 
 type DatabaseConfig struct {
-	DSN string
+	URL string
 }
 
 type JWTConfig struct {
@@ -33,41 +33,31 @@ type ProxyConfig struct {
 	TrustedProxies []string
 }
 
-func Load() *Config {
-	jwtSecret := os.Getenv("JWT_SECRET")
-	if jwtSecret == "" {
-		jwtSecret = "your-super-secret-key-change-in-production"
-	}
-
-	port := os.Getenv("PORT")
-	if port == "" {
-		port = ":8080"
-	} else {
-		port = ":" + port
-	}
-
-	env := os.Getenv("ENVIRONMENT")
-	if env == "" {
-		env = "development"
-	}
-
-	return &Config{
+func Load() Config {
+	return Config{
 		Server: ServerConfig{
-			Port:         port,
-			Environment:  env,
-			ReadTimeout:  15 * time.Second,
+			Port:        getEnv("PORT", ":8080"),
+			Environment: getEnv("ENVIRONMENT", "development"),
+			ReadTimeout: 15 * time.Second,
 			WriteTimeout: 15 * time.Second,
-			IdleTimeout:  60 * time.Second,
+			IdleTimeout: 60 * time.Second,
 		},
 		Database: DatabaseConfig{
-			DSN: "users.db",
+			URL: getEnv("DATABASE_URL", "postgresql://user:password@localhost:5432/backend?sslmode=disable"),
 		},
 		JWT: JWTConfig{
-			SecretKey: jwtSecret,
+			SecretKey: getEnv("JWT_SECRET", "your-secret-key"),
 			ExpiresIn: 24 * time.Hour,
 		},
 		Proxy: ProxyConfig{
-			TrustedProxies: []string{"127.0.0.1", "localhost"},
+			TrustedProxies: []string{"127.0.0.1"},
 		},
 	}
+}
+
+func getEnv(key, defaultValue string) string {
+	if value := os.Getenv(key); value != "" {
+		return value
+	}
+	return defaultValue
 }
