@@ -1,11 +1,14 @@
 import { 
-  LoginRequest, 
-  RegisterRequest, 
-  AuthResponse, 
-  User, 
   UserProfile, 
   UpdateProfileRequest, 
   ChangePasswordRequest 
+} from '@/types/user';
+
+import {
+  LoginRequest, 
+  RegisterRequest, 
+  AuthResponse, 
+  User,
 } from '@/types/auth';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';

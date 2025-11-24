@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { ChangePasswordRequest } from '@/types/auth';
+import { ChangePasswordRequest } from '@/types/user';
 
 interface ChangePasswordFormProps {
   onChangePassword: (passwordData: ChangePasswordRequest) => Promise<void>;
@@ -21,7 +21,6 @@ export default function ChangePasswordForm({ onChangePassword, onCancel, loading
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
     
-    // Очищаем ошибку при изменении поля
     if (errors[name]) {
       setErrors(prev => ({ ...prev, [name]: '' }));
     }

@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { AuthService } from '@/lib/auth';
-import { UserProfile, UpdateProfileRequest, ChangePasswordRequest } from '@/types/auth';
+import { UserProfile, UpdateProfileRequest, ChangePasswordRequest } from '@/types/user';
 import EditProfileForm from '@/components/EditProfileForm';
 import ChangePasswordForm from '@/components/ChangePasswordForm';
 
@@ -141,12 +141,10 @@ export default function ProfilePage() {
           </div>
         )}
         
-        {/* Заголовок в одну строку */}
         <div className="mb-6">
           <h1 className="text-2xl font-bold text-gray-900">Профиль</h1>
         </div>
         
-        {/* Информация о пользователе */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
           <div className="space-y-4">
             <div>

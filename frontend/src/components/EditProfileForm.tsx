@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { UserProfile, UpdateProfileRequest } from '@/types/auth';
+import { UserProfile, UpdateProfileRequest } from '@/types/user';
 
 interface EditProfileFormProps {
   user: UserProfile;
