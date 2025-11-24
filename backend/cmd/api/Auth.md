@@ -66,3 +66,12 @@ curl -X GET http://localhost:8080/api/profile \
     }
 }
 ```
+
+### Обновление профиля
+
+```sh
+curl -X PUT http://localhost:8080/api/profile \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"username":"newusername","email":"new@example.com"}'
+```
