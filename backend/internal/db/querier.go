@@ -11,12 +11,19 @@ import (
 )
 
 type Querier interface {
+	CreateOrder(ctx context.Context, arg CreateOrderParams) (Order, error)
 	CreateUser(ctx context.Context, arg CreateUserParams) (User, error)
+	DeleteOrder(ctx context.Context, arg DeleteOrderParams) error
+	DeleteOrderByID(ctx context.Context, id pgtype.UUID) error
 	DeleteUser(ctx context.Context, id pgtype.UUID) error
+	GetAllOrders(ctx context.Context) ([]GetAllOrdersRow, error)
+	GetOrderByID(ctx context.Context, id pgtype.UUID) (GetOrderByIDRow, error)
+	GetOrdersByCustomer(ctx context.Context, customerID pgtype.UUID) ([]GetOrdersByCustomerRow, error)
 	GetUserByEmail(ctx context.Context, email string) (User, error)
 	GetUserByID(ctx context.Context, id pgtype.UUID) (User, error)
 	GetUserByUsername(ctx context.Context, username string) (User, error)
 	ListUsers(ctx context.Context) ([]User, error)
+	UpdateOrder(ctx context.Context, arg UpdateOrderParams) (Order, error)
 	UpdateUser(ctx context.Context, arg UpdateUserParams) (User, error)
 	UpdateUserPassword(ctx context.Context, arg UpdateUserPasswordParams) (User, error)
 }

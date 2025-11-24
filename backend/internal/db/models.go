@@ -8,6 +8,19 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+type Order struct {
+	ID          pgtype.UUID        `json:"id"`
+	CustomerID  pgtype.UUID        `json:"customer_id"`
+	Title       string             `json:"title"`
+	Description string             `json:"description"`
+	Budget      pgtype.Numeric     `json:"budget"`
+	Category    string             `json:"category"`
+	Section     string             `json:"section"`
+	Status      pgtype.Text        `json:"status"`
+	CreatedAt   pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt   pgtype.Timestamptz `json:"updated_at"`
+}
+
 type User struct {
 	ID           pgtype.UUID        `json:"id"`
 	Username     string             `json:"username"`
