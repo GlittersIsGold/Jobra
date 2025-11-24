@@ -5,24 +5,36 @@ import { useRouter } from 'next/navigation';
 
 export default function Header() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [username, setUsername] = useState('');
   const router = useRouter();
 
   useEffect(() => {
-    // Проверяем аутентификацию только на клиенте
     const token = localStorage.getItem('jwt_token');
     setIsAuthenticated(!!token);
+    
+    const userData = localStorage.getItem('user_data');
+    if (userData) {
+      try {
+        const user = JSON.parse(userData);
+        setUsername(user.username);
+      } catch (e) {
+        console.error('Failed to parse user data');
+      }
+    }
   }, []);
 
   const handleLogout = () => {
     localStorage.removeItem('jwt_token');
+    localStorage.removeItem('user_data');
     setIsAuthenticated(false);
+    setUsername('');
     router.push('/login');
   };
 
   return (
     <header className="bg-blue-600 text-white shadow-lg">
       <div className="container mx-auto px-4 py-4 flex justify-between items-center">
-        <h1 className="text-xl font-bold">My App</h1>
+        <h1 className="text-xl font-bold">Джобра</h1>
         
         <nav>
           <ul className="flex space-x-4 items-center">
