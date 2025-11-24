@@ -21,7 +21,13 @@ ORDER BY username;
 
 -- name: UpdateUser :one
 UPDATE users 
-SET username = $2, email = $3, password_hash = $4, updated_at = NOW()
+SET username = $2, email = $3, updated_at = NOW()
+WHERE id = $1
+RETURNING *;
+
+-- name: UpdateUserPassword :one
+UPDATE users 
+SET password_hash = $2, updated_at = NOW()
 WHERE id = $1
 RETURNING *;
 
