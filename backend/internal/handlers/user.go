@@ -113,3 +113,43 @@ func (h *UserHandler) UpdateProfile(c *gin.Context) {
 		},
 	})
 }
+
+func (h *UserHandler) ChangePassword(c *gin.Context) {
+    userID, exists := c.Get("user_id")
+    if !exists {
+        c.JSON(http.StatusUnauthorized, gin.H{"error": "User not authenticated"})
+        return
+    }
+
+    var req models.ChangePasswordRequest
+    if err := c.ShouldBindJSON(&req); err != nil {
+        c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+        return
+    }
+
+    user, err := h.userRepo.FindByID(userID.(string))
+    if err != nil {
+        c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
+        return
+    }
+
+    if err := user.CheckPassword(req.CurrentPassword); err != nil {
+        c.JSON(http.StatusBadRequest, gin.H{"error": "Current password is incorrect"})
+        return
+    }
+
+    user.PasswordHash = req.NewPassword
+    if err := user.HashPassword(); err != nil {
+        c.JSON(http.StatusInternalServerError, gin.H{"error": "Could not hash password"})
+        return
+    }
+
+    if err := h.userRepo.UpdatePassword(user); err != nil {
+        c.JSON(http.StatusInternalServerError, gin.H{"error": "Could not update password"})
+        return
+    }
+
+    c.JSON(http.StatusOK, gin.H{
+        "message": "Password updated successfully",
+    })
+}
