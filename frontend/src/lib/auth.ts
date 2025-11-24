@@ -1,4 +1,12 @@
-import { LoginRequest, RegisterRequest, AuthResponse, User, UserProfile, UpdateProfileRequest } from '@/types/auth';
+import { 
+  LoginRequest, 
+  RegisterRequest, 
+  AuthResponse, 
+  User, 
+  UserProfile, 
+  UpdateProfileRequest, 
+  ChangePasswordRequest 
+} from '@/types/auth';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
 
@@ -69,6 +77,29 @@ export class AuthService {
     if (!response.ok) {
       const errorText = await response.text();
       throw new Error(`Profile update failed: ${response.status} - ${errorText}`);
+    }
+
+    return response.json();
+  }
+
+  static async changePassword(passwordData: ChangePasswordRequest): Promise<{ message: string }> {
+    const token = this.getToken();
+    if (!token) {
+      throw new Error('Not authenticated');
+    }
+
+    const response = await fetch(`${API_BASE_URL}/api/profile/password`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
+      },
+      body: JSON.stringify(passwordData),
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`Password change failed: ${response.status} - ${errorText}`);
     }
 
     return response.json();
