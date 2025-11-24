@@ -46,6 +46,11 @@ export default function Header() {
                   </a>
                 </li>
                 <li>
+                  <a href="/orders" className="hover:text-blue-200">
+                    Мои заказы
+                  </a>
+                </li>
+                <li>
                   <button
                     onClick={handleLogout}
                     className="bg-blue-700 hover:bg-blue-800 px-3 py-1 rounded"
