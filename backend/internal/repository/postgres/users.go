@@ -101,3 +101,24 @@ func toModelUser(dbUser *db.User) *models.User {
 		UpdatedAt:    dbUser.UpdatedAt.Time,
 	}
 }
+
+func (r *UserRepository) Update(user *models.User) error {
+	ctx := context.Background()
+	
+	var userID pgtype.UUID
+	if err := userID.Scan(user.ID); err != nil {
+		return err
+	}
+	
+	dbUser, err := r.queries.UpdateUser(ctx, db.UpdateUserParams{
+		ID:       userID,
+		Username: user.Username,
+		Email:    user.Email,
+	})
+	if err != nil {
+		return err
+	}
+	
+	user.UpdatedAt = dbUser.UpdatedAt.Time
+	return nil
+}

@@ -17,4 +17,5 @@ type UserRepository interface {
 	FindByUsername(username string) (*models.User, error)
 	FindByEmail(email string) (*models.User, error)
 	FindAll() ([]*models.User, error)
+	Update(user *models.User) error
 }
