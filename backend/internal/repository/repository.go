@@ -20,3 +20,13 @@ type UserRepository interface {
 	Update(user *models.User) error
 	UpdatePassword(user *models.User) error
 }
+
+type OrderRepository interface {
+    Create(order *models.Order) error
+    FindByID(id string) (*models.Order, error)
+    FindByCustomer(customerID string) ([]*models.Order, error)
+    FindAll() ([]*models.Order, error)
+    Update(order *models.Order) error
+    Delete(id string, customerID string) error
+    DeleteByID(id string) error
+}
