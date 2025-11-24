@@ -18,5 +18,6 @@ func SetupRoutes(router *gin.Engine, authHandler *AuthHandler, userHandler *User
 	{
 		protected.GET("/profile", userHandler.GetProfile)
 		protected.GET("/users", userHandler.GetUsers)
+		protected.PUT("/profile", userHandler.UpdateProfile)
 	}
 }
