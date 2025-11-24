@@ -41,6 +41,9 @@ func main() {
 	authHandler := handlers.NewAuthHandler(authService)
 	userHandler := handlers.NewUserHandler(userRepo)
 
+	orderRepo := postgres.NewOrderRepository(pool)
+	orderHandler := handlers.NewOrderHandler(orderRepo)
+
 	router := gin.New()
 	router.SetTrustedProxies(cfg.Proxy.TrustedProxies)
 
@@ -61,7 +64,7 @@ func main() {
 		c.Next()
 	})
 
-	handlers.SetupRoutes(router, authHandler, userHandler, jwtManager)
+	handlers.SetupRoutes(router, authHandler, userHandler, jwtManager, orderHandler)
 
 	server := &http.Server{
 		Addr:         cfg.Server.Port,
