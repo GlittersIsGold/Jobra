@@ -67,11 +67,50 @@ curl -X GET http://localhost:8080/api/profile \
 }
 ```
 
-### Обновление профиля
+## Обновление профиля
+
+### Команда
 
 ```sh
 curl -X PUT http://localhost:8080/api/profile \
   -H "Authorization: Bearer YOUR_JWT_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{"username":"newusername","email":"new@example.com"}'
+```
+
+### Ответ сервера
+
+```json
+{
+  "status": "success",
+  "message": "Profile updated successfully",
+  "data": {
+    "id": 123,
+    "name": "Новое Имя",
+    "email": "new@example.com"
+  }
+}
+```
+
+## Обновление пароля
+
+### Команда
+
+```sh
+curl -X POST http://localhost:8080/api/profile/password \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer your_token_here" \
+  -d '{
+    "currentPassword": "oldPassword123",
+    "newPassword": "newPassword456"
+  }'
+```
+
+### Ответ сервера
+
+```json
+{
+  "status": "success",
+  "message": "Password changed successfully"
+}
 ```
