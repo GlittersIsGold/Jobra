@@ -122,3 +122,23 @@ func (r *UserRepository) Update(user *models.User) error {
 	user.UpdatedAt = dbUser.UpdatedAt.Time
 	return nil
 }
+
+func (r *UserRepository) UpdatePassword(user *models.User) error {
+    ctx := context.Background()
+    
+    var userID pgtype.UUID
+    if err := userID.Scan(user.ID); err != nil {
+        return err
+    }
+    
+    dbUser, err := r.queries.UpdateUserPassword(ctx, db.UpdateUserPasswordParams{
+        ID:           userID,
+        PasswordHash: user.PasswordHash,
+    })
+    if err != nil {
+        return err
+    }
+    
+    user.UpdatedAt = dbUser.UpdatedAt.Time
+    return nil
+}
