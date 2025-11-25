@@ -41,13 +41,18 @@ export default function Header() {
             {isAuthenticated ? (
               <>
                 <li>
-                  <a href="/profile" className="hover:text-blue-200">
-                    Профиль
+                  <a href="/orders" className="hover:text-blue-200">
+                    Все заказы
                   </a>
                 </li>
                 <li>
-                  <a href="/orders" className="hover:text-blue-200">
+                  <a href="/my-orders" className="hover:text-blue-200">
                     Мои заказы
+                  </a>
+                </li>
+                <li>
+                  <a href="/profile" className="hover:text-blue-200">
+                    Профиль
                   </a>
                 </li>
                 <li>
