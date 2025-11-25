@@ -368,3 +368,140 @@ curl -X GET http://localhost:8080/api/users \
   "count": 1
 }
 ```
+
+## Создание связи пользователя с заказом
+
+### Команда
+
+```sh
+curl -X POST "http://localhost:8080/api/order-users" \
+  -H "Authorization: Bearer your_token_here" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "order_id": "order-12345",
+    "user_id": "user-67890",
+    "role": "executor"
+  }'
+```
+
+### Ответ сервера
+
+```json
+{
+  "id": "order-user-12345",
+  "order_id": "order-12345",
+  "user_id": "user-67890",
+  "role": "executor",
+  "created_at": "2024-01-15T10:30:00Z"
+}
+```
+
+## Получение всех связей пользователей с заказами
+
+### Команда
+
+```sh
+curl -X GET "http://localhost:8080/api/order-users" \
+  -H "Authorization: Bearer your_token_here"
+```
+
+### Ответ сервера
+
+```json
+{
+  "order_users": [
+    {
+      "id": "order-user-12345",
+      "order_id": "order-12345",
+      "user_id": "user-67890",
+      "role": "executor",
+      "created_at": "2024-01-15T10:30:00Z"
+    }
+  ],
+  "count": 1
+}
+```
+
+## Проверка существования связи пользователя с заказом
+
+### Команда 
+
+```sh
+curl -X GET "http://localhost:8080/api/check-order-user?order_id=order-12345&user_id=user-67890" \
+  -H "Authorization: Bearer your_token_here"
+```
+
+### Ответ
+
+```json
+{
+  "exists": true,
+  "order_id": "order-12345",
+  "user_id": "user-67890"
+}
+```
+
+## Назначение исполнителя на заказ
+
+### Команда
+
+```sh
+curl -X POST "http://localhost:8080/api/assign" \
+  -H "Authorization: Bearer your_token_here" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "order_id": "order-12345",
+    "user_id": "user-67890"
+  }'
+```
+
+### Ответ сервера
+
+```json
+{
+  "id": "order-user-12345",
+  "order_id": "order-12345",
+  "user_id": "user-67890",
+  "role": "executor",
+  "created_at": "2024-01-15T10:30:00Z"
+}
+```
+
+## Удаление исполнителя из заказа
+
+### Команда
+
+```sh
+curl -X POST "http://localhost:8080/api/remove-executor" \
+  -H "Authorization: Bearer your_token_here" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "order_id": "order-12345",
+    "user_id": "user-67890"
+  }'
+```
+
+### Ответ сервера
+
+```json
+{
+  "message": "Executor removed successfully"
+}
+```
+
+## Удаление связи пользователя с заказом
+
+### Команда
+
+```sh
+curl -X DELETE "http://localhost:8080/api/order-users/order-user-12345" \
+  -H "Authorization: Bearer your_token_here"
+```
+
+### Ответ сервера
+
+```json
+{
+  "message": "Response deleted successfully"
+}
+```
