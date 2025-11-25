@@ -9,6 +9,8 @@ export interface Order {
     status: string;
     created_at: string;
     updated_at: string;
+    executor_id?: string;
+    executor_assigned_at?: string;
 }
   
 export interface CreateOrderRequest {
