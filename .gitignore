@@ -1,0 +1,2 @@
+# avoid postgres container volume data
+data/

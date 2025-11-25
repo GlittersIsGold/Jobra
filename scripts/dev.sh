@@ -3,6 +3,12 @@
 set -e
 
 echo "Starting Jobra development environment"
+POSTGRES_DATA_DIR="./data"
+if [ ! -d "$POSTGRES_DATA_DIR" ]; then
+    echo "Creating PostgreSQL data directory..."
+    mkdir -p "$POSTGRES_DATA_DIR"
+    echo "Data directory created: $POSTGRES_DATA_DIR"
+fi
 
 echo "Starting PostgreSQL"
 if docker ps -a --format '{{.Names}}' | grep -q "jobra-postgres"; then
@@ -15,12 +21,23 @@ else
       -e POSTGRES_USER=user \
       -e POSTGRES_PASSWORD=password \
       -p 5432:5432 \
+      -v "$(pwd)/data:/var/lib/postgresql/data" \
       -v $(pwd)/backend/sql/schema:/docker-entrypoint-initdb.d \
       postgres:16
 fi
 
 echo "Waiting for PostgreSQL"
-sleep 5
+for i in {1..30}; do
+    if docker exec jobra-postgres pg_isready -U user -d backend > /dev/null 2>&1; then
+        echo "PostgreSQL is ready!"
+        break
+    fi
+    if [ $i -eq 30 ]; then
+        echo "ERROR: PostgreSQL failed to start within 30 seconds"
+        exit 1
+    fi
+    sleep 1
+done
 
 echo "Starting backend"
 cd backend
