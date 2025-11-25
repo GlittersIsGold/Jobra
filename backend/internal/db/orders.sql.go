@@ -14,7 +14,7 @@ import (
 const createOrder = `-- name: CreateOrder :one
 INSERT INTO orders (customer_id, title, description, budget, category, section, status)
 VALUES ($1, $2, $3, $4, $5, $6, $7)
-RETURNING id, customer_id, title, description, budget, category, section, status, created_at, updated_at
+RETURNING id, customer_id, title, description, budget, category, section, status, created_at, updated_at, executor_id, executor_assigned_at
 `
 
 type CreateOrderParams struct {
@@ -49,6 +49,8 @@ func (q *Queries) CreateOrder(ctx context.Context, arg CreateOrderParams) (Order
 		&i.Status,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.ExecutorID,
+		&i.ExecutorAssignedAt,
 	)
 	return i, err
 }
@@ -80,7 +82,7 @@ func (q *Queries) DeleteOrderByID(ctx context.Context, id pgtype.UUID) error {
 
 const getAllOrders = `-- name: GetAllOrders :many
 SELECT 
-    o.id, o.customer_id, o.title, o.description, o.budget, o.category, o.section, o.status, o.created_at, o.updated_at,
+    o.id, o.customer_id, o.title, o.description, o.budget, o.category, o.section, o.status, o.created_at, o.updated_at, o.executor_id, o.executor_assigned_at,
     u.username as customer_username,
     u.email as customer_email
 FROM orders o
@@ -89,18 +91,20 @@ ORDER BY o.created_at DESC
 `
 
 type GetAllOrdersRow struct {
-	ID               pgtype.UUID        `json:"id"`
-	CustomerID       pgtype.UUID        `json:"customer_id"`
-	Title            string             `json:"title"`
-	Description      string             `json:"description"`
-	Budget           pgtype.Numeric     `json:"budget"`
-	Category         string             `json:"category"`
-	Section          string             `json:"section"`
-	Status           pgtype.Text        `json:"status"`
-	CreatedAt        pgtype.Timestamptz `json:"created_at"`
-	UpdatedAt        pgtype.Timestamptz `json:"updated_at"`
-	CustomerUsername string             `json:"customer_username"`
-	CustomerEmail    string             `json:"customer_email"`
+	ID                 pgtype.UUID        `json:"id"`
+	CustomerID         pgtype.UUID        `json:"customer_id"`
+	Title              string             `json:"title"`
+	Description        string             `json:"description"`
+	Budget             pgtype.Numeric     `json:"budget"`
+	Category           string             `json:"category"`
+	Section            string             `json:"section"`
+	Status             pgtype.Text        `json:"status"`
+	CreatedAt          pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt          pgtype.Timestamptz `json:"updated_at"`
+	ExecutorID         pgtype.UUID        `json:"executor_id"`
+	ExecutorAssignedAt pgtype.Timestamptz `json:"executor_assigned_at"`
+	CustomerUsername   string             `json:"customer_username"`
+	CustomerEmail      string             `json:"customer_email"`
 }
 
 func (q *Queries) GetAllOrders(ctx context.Context) ([]GetAllOrdersRow, error) {
@@ -123,6 +127,8 @@ func (q *Queries) GetAllOrders(ctx context.Context) ([]GetAllOrdersRow, error) {
 			&i.Status,
 			&i.CreatedAt,
 			&i.UpdatedAt,
+			&i.ExecutorID,
+			&i.ExecutorAssignedAt,
 			&i.CustomerUsername,
 			&i.CustomerEmail,
 		); err != nil {
@@ -138,7 +144,7 @@ func (q *Queries) GetAllOrders(ctx context.Context) ([]GetAllOrdersRow, error) {
 
 const getOrderByID = `-- name: GetOrderByID :one
 SELECT 
-    o.id, o.customer_id, o.title, o.description, o.budget, o.category, o.section, o.status, o.created_at, o.updated_at,
+    o.id, o.customer_id, o.title, o.description, o.budget, o.category, o.section, o.status, o.created_at, o.updated_at, o.executor_id, o.executor_assigned_at,
     u.username as customer_username,
     u.email as customer_email
 FROM orders o
@@ -147,18 +153,20 @@ WHERE o.id = $1
 `
 
 type GetOrderByIDRow struct {
-	ID               pgtype.UUID        `json:"id"`
-	CustomerID       pgtype.UUID        `json:"customer_id"`
-	Title            string             `json:"title"`
-	Description      string             `json:"description"`
-	Budget           pgtype.Numeric     `json:"budget"`
-	Category         string             `json:"category"`
-	Section          string             `json:"section"`
-	Status           pgtype.Text        `json:"status"`
-	CreatedAt        pgtype.Timestamptz `json:"created_at"`
-	UpdatedAt        pgtype.Timestamptz `json:"updated_at"`
-	CustomerUsername string             `json:"customer_username"`
-	CustomerEmail    string             `json:"customer_email"`
+	ID                 pgtype.UUID        `json:"id"`
+	CustomerID         pgtype.UUID        `json:"customer_id"`
+	Title              string             `json:"title"`
+	Description        string             `json:"description"`
+	Budget             pgtype.Numeric     `json:"budget"`
+	Category           string             `json:"category"`
+	Section            string             `json:"section"`
+	Status             pgtype.Text        `json:"status"`
+	CreatedAt          pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt          pgtype.Timestamptz `json:"updated_at"`
+	ExecutorID         pgtype.UUID        `json:"executor_id"`
+	ExecutorAssignedAt pgtype.Timestamptz `json:"executor_assigned_at"`
+	CustomerUsername   string             `json:"customer_username"`
+	CustomerEmail      string             `json:"customer_email"`
 }
 
 func (q *Queries) GetOrderByID(ctx context.Context, id pgtype.UUID) (GetOrderByIDRow, error) {
@@ -175,6 +183,8 @@ func (q *Queries) GetOrderByID(ctx context.Context, id pgtype.UUID) (GetOrderByI
 		&i.Status,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.ExecutorID,
+		&i.ExecutorAssignedAt,
 		&i.CustomerUsername,
 		&i.CustomerEmail,
 	)
@@ -183,7 +193,7 @@ func (q *Queries) GetOrderByID(ctx context.Context, id pgtype.UUID) (GetOrderByI
 
 const getOrdersByCustomer = `-- name: GetOrdersByCustomer :many
 SELECT 
-    o.id, o.customer_id, o.title, o.description, o.budget, o.category, o.section, o.status, o.created_at, o.updated_at,
+    o.id, o.customer_id, o.title, o.description, o.budget, o.category, o.section, o.status, o.created_at, o.updated_at, o.executor_id, o.executor_assigned_at,
     u.username as customer_username,
     u.email as customer_email
 FROM orders o
@@ -193,18 +203,20 @@ ORDER BY o.created_at DESC
 `
 
 type GetOrdersByCustomerRow struct {
-	ID               pgtype.UUID        `json:"id"`
-	CustomerID       pgtype.UUID        `json:"customer_id"`
-	Title            string             `json:"title"`
-	Description      string             `json:"description"`
-	Budget           pgtype.Numeric     `json:"budget"`
-	Category         string             `json:"category"`
-	Section          string             `json:"section"`
-	Status           pgtype.Text        `json:"status"`
-	CreatedAt        pgtype.Timestamptz `json:"created_at"`
-	UpdatedAt        pgtype.Timestamptz `json:"updated_at"`
-	CustomerUsername string             `json:"customer_username"`
-	CustomerEmail    string             `json:"customer_email"`
+	ID                 pgtype.UUID        `json:"id"`
+	CustomerID         pgtype.UUID        `json:"customer_id"`
+	Title              string             `json:"title"`
+	Description        string             `json:"description"`
+	Budget             pgtype.Numeric     `json:"budget"`
+	Category           string             `json:"category"`
+	Section            string             `json:"section"`
+	Status             pgtype.Text        `json:"status"`
+	CreatedAt          pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt          pgtype.Timestamptz `json:"updated_at"`
+	ExecutorID         pgtype.UUID        `json:"executor_id"`
+	ExecutorAssignedAt pgtype.Timestamptz `json:"executor_assigned_at"`
+	CustomerUsername   string             `json:"customer_username"`
+	CustomerEmail      string             `json:"customer_email"`
 }
 
 func (q *Queries) GetOrdersByCustomer(ctx context.Context, customerID pgtype.UUID) ([]GetOrdersByCustomerRow, error) {
@@ -227,6 +239,8 @@ func (q *Queries) GetOrdersByCustomer(ctx context.Context, customerID pgtype.UUI
 			&i.Status,
 			&i.CreatedAt,
 			&i.UpdatedAt,
+			&i.ExecutorID,
+			&i.ExecutorAssignedAt,
 			&i.CustomerUsername,
 			&i.CustomerEmail,
 		); err != nil {
@@ -244,7 +258,7 @@ const updateOrder = `-- name: UpdateOrder :one
 UPDATE orders 
 SET title = $2, description = $3, budget = $4, category = $5, section = $6, status = $7, updated_at = NOW()
 WHERE id = $1
-RETURNING id, customer_id, title, description, budget, category, section, status, created_at, updated_at
+RETURNING id, customer_id, title, description, budget, category, section, status, created_at, updated_at, executor_id, executor_assigned_at
 `
 
 type UpdateOrderParams struct {
@@ -279,6 +293,8 @@ func (q *Queries) UpdateOrder(ctx context.Context, arg UpdateOrderParams) (Order
 		&i.Status,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.ExecutorID,
+		&i.ExecutorAssignedAt,
 	)
 	return i, err
 }

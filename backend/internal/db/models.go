@@ -9,16 +9,28 @@ import (
 )
 
 type Order struct {
-	ID          pgtype.UUID        `json:"id"`
-	CustomerID  pgtype.UUID        `json:"customer_id"`
-	Title       string             `json:"title"`
-	Description string             `json:"description"`
-	Budget      pgtype.Numeric     `json:"budget"`
-	Category    string             `json:"category"`
-	Section     string             `json:"section"`
-	Status      pgtype.Text        `json:"status"`
-	CreatedAt   pgtype.Timestamptz `json:"created_at"`
-	UpdatedAt   pgtype.Timestamptz `json:"updated_at"`
+	ID                 pgtype.UUID        `json:"id"`
+	CustomerID         pgtype.UUID        `json:"customer_id"`
+	Title              string             `json:"title"`
+	Description        string             `json:"description"`
+	Budget             pgtype.Numeric     `json:"budget"`
+	Category           string             `json:"category"`
+	Section            string             `json:"section"`
+	Status             pgtype.Text        `json:"status"`
+	CreatedAt          pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt          pgtype.Timestamptz `json:"updated_at"`
+	ExecutorID         pgtype.UUID        `json:"executor_id"`
+	ExecutorAssignedAt pgtype.Timestamptz `json:"executor_assigned_at"`
+}
+
+type OrderUser struct {
+	ID        pgtype.UUID        `json:"id"`
+	OrderID   pgtype.UUID        `json:"order_id"`
+	UserID    pgtype.UUID        `json:"user_id"`
+	Message   pgtype.Text        `json:"message"`
+	Status    pgtype.Text        `json:"status"`
+	CreatedAt pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt pgtype.Timestamptz `json:"updated_at"`
 }
 
 type User struct {

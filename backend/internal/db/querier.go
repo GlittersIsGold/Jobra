@@ -11,19 +11,29 @@ import (
 )
 
 type Querier interface {
+	AssignOrderExecutor(ctx context.Context, arg AssignOrderExecutorParams) (Order, error)
+	CheckOrderUserExists(ctx context.Context, arg CheckOrderUserExistsParams) (bool, error)
 	CreateOrder(ctx context.Context, arg CreateOrderParams) (Order, error)
+	// sql/queries/order_users.sql
+	CreateOrderUser(ctx context.Context, arg CreateOrderUserParams) (OrderUser, error)
 	CreateUser(ctx context.Context, arg CreateUserParams) (User, error)
 	DeleteOrder(ctx context.Context, arg DeleteOrderParams) error
 	DeleteOrderByID(ctx context.Context, id pgtype.UUID) error
+	DeleteOrderUser(ctx context.Context, arg DeleteOrderUserParams) error
 	DeleteUser(ctx context.Context, id pgtype.UUID) error
 	GetAllOrders(ctx context.Context) ([]GetAllOrdersRow, error)
 	GetOrderByID(ctx context.Context, id pgtype.UUID) (GetOrderByIDRow, error)
+	GetOrderUsers(ctx context.Context, orderID pgtype.UUID) ([]GetOrderUsersRow, error)
+	GetOrderWithDetails(ctx context.Context, id pgtype.UUID) (GetOrderWithDetailsRow, error)
 	GetOrdersByCustomer(ctx context.Context, customerID pgtype.UUID) ([]GetOrdersByCustomerRow, error)
 	GetUserByEmail(ctx context.Context, email string) (User, error)
 	GetUserByID(ctx context.Context, id pgtype.UUID) (User, error)
 	GetUserByUsername(ctx context.Context, username string) (User, error)
+	GetUserOrderUser(ctx context.Context, arg GetUserOrderUserParams) (OrderUser, error)
 	ListUsers(ctx context.Context) ([]User, error)
+	RemoveOrderExecutor(ctx context.Context, id pgtype.UUID) (Order, error)
 	UpdateOrder(ctx context.Context, arg UpdateOrderParams) (Order, error)
+	UpdateOrderUserStatus(ctx context.Context, arg UpdateOrderUserStatusParams) (OrderUser, error)
 	UpdateUser(ctx context.Context, arg UpdateUserParams) (User, error)
 	UpdateUserPassword(ctx context.Context, arg UpdateUserPasswordParams) (User, error)
 }
