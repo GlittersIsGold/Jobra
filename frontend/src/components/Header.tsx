@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 
 export default function Header() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -34,31 +35,33 @@ export default function Header() {
   return (
     <header className="bg-blue-600 text-white shadow-lg">
       <div className="container mx-auto px-4 py-4 flex justify-between items-center">
-        <h1 className="text-xl font-bold">Джобра</h1>
+        <Link href="/" className="text-xl font-bold">
+          Джобра
+        </Link>
         
         <nav>
-          <ul className="flex space-x-4 items-center">
+          <ul className="flex space-x-6 items-center">
             {isAuthenticated ? (
               <>
                 <li>
-                  <a href="/orders" className="hover:text-blue-200">
+                  <Link href="/orders" className="hover:text-blue-200 transition-colors">
                     Все заказы
-                  </a>
+                  </Link>
                 </li>
                 <li>
-                  <a href="/my-orders" className="hover:text-blue-200">
+                  <Link href="/my-orders" className="hover:text-blue-200 transition-colors">
                     Мои заказы
-                  </a>
+                  </Link>
                 </li>
                 <li>
-                  <a href="/profile" className="hover:text-blue-200">
+                  <Link href="/profile" className="hover:text-blue-200 transition-colors">
                     Профиль
-                  </a>
+                  </Link>
                 </li>
-                <li>
+                <li className="flex items-center space-x-2">
                   <button
                     onClick={handleLogout}
-                    className="bg-blue-700 hover:bg-blue-800 px-3 py-1 rounded"
+                    className="bg-blue-700 hover:bg-blue-800 px-3 py-1 rounded transition-colors"
                   >
                     Выйти
                   </button>
@@ -67,14 +70,14 @@ export default function Header() {
             ) : (
               <>
                 <li>
-                  <a href="/login" className="hover:text-blue-200">
+                  <Link href="/login" className="hover:text-blue-200 transition-colors">
                     Вход
-                  </a>
+                  </Link>
                 </li>
                 <li>
-                  <a href="/register" className="hover:text-blue-200">
+                  <Link href="/register" className="hover:text-blue-200 transition-colors">
                     Регистрация
-                  </a>
+                  </Link>
                 </li>
               </>
             )}
