@@ -37,12 +37,17 @@ func main() {
 	userRepo := postgres.NewUserRepository(pool)
 
 	jwtManager := auth.NewJWTManager(cfg.JWT.SecretKey, cfg.JWT.ExpiresIn)
+	
 	authService := auth.NewAuthService(userRepo, jwtManager)
 	authHandler := handlers.NewAuthHandler(authService)
+	
 	userHandler := handlers.NewUserHandler(userRepo)
 
 	orderRepo := postgres.NewOrderRepository(pool)
 	orderHandler := handlers.NewOrderHandler(orderRepo)
+
+	orderUserRepo := postgres.NewOrderUserRepository(pool)
+	orderUserHandler := handlers.NewOrderUserHandler(orderUserRepo, orderRepo)
 
 	router := gin.New()
 	router.SetTrustedProxies(cfg.Proxy.TrustedProxies)
@@ -64,7 +69,14 @@ func main() {
 		c.Next()
 	})
 
-	handlers.SetupRoutes(router, authHandler, userHandler, jwtManager, orderHandler)
+	handlers.SetupRoutes(
+		router, 
+		authHandler, 
+		userHandler, 
+		jwtManager, 
+		orderHandler, 
+		orderUserHandler,
+	)
 
 	server := &http.Server{
 		Addr:         cfg.Server.Port,
