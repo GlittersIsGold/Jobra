@@ -1,15 +1,18 @@
 'use client';
 
 import { Order } from '@/types/order';
+import ResponseButton from './ResponseButton';
+import Link from 'next/link';
 
 interface OrderListProps {
   orders: Order[];
   onEdit?: (order: Order) => void;
   onDelete?: (orderId: string) => void;
   showActions?: boolean;
+  currentUserId?: string;
 }
 
-export default function OrderList({ orders, onEdit, onDelete, showActions = true }: OrderListProps) {
+export default function OrderList({ orders, onEdit, onDelete, showActions = true, currentUserId }: OrderListProps) {
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('ru-RU', {
       day: 'numeric',
@@ -33,6 +36,8 @@ export default function OrderList({ orders, onEdit, onDelete, showActions = true
         return 'bg-blue-100 text-blue-800';
       case 'cancelled':
         return 'bg-red-100 text-red-800';
+      case 'in_progress':
+        return 'bg-yellow-100 text-yellow-800';
       default:
         return 'bg-gray-100 text-gray-800';
     }
@@ -46,6 +51,8 @@ export default function OrderList({ orders, onEdit, onDelete, showActions = true
         return 'Завершен';
       case 'cancelled':
         return 'Отменен';
+      case 'in_progress':
+        return 'В работе';
       default:
         return status;
     }
@@ -93,22 +100,51 @@ export default function OrderList({ orders, onEdit, onDelete, showActions = true
             </div>
           </div>
 
-          {showActions && onEdit && onDelete && (
-            <div className="flex space-x-3 pt-4 border-t border-gray-200">
-              <button
-                onClick={() => onEdit(order)}
-                className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 text-sm font-medium"
-              >
-                Редактировать
-              </button>
-              <button
-                onClick={() => onDelete(order.id)}
-                className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 text-sm font-medium"
-              >
-                Удалить
-              </button>
+          {order.executor_id && (
+            <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+              <p className="text-blue-800 text-sm">
+                <span className="font-semibold">Исполнитель назначен</span>
+                {order.executor_assigned_at && (
+                  <span className="ml-2">
+                    {new Date(order.executor_assigned_at).toLocaleDateString('ru-RU')}
+                  </span>
+                )}
+              </p>
             </div>
           )}
+
+          <div className="flex justify-between items-center pt-4 border-t border-gray-200">
+            {!showActions && currentUserId && (
+              <ResponseButton 
+                orderId={order.id}
+                customerId={order.customer_id}
+                currentUserId={currentUserId}
+              />
+            )}
+
+            {showActions && onEdit && onDelete && (
+              <div className="flex space-x-3">
+                <button
+                  onClick={() => onEdit(order)}
+                  className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 text-sm font-medium"
+                >
+                  Редактировать
+                </button>
+                <button
+                  onClick={() => onDelete(order.id)}
+                  className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 text-sm font-medium"
+                >
+                  Удалить
+                </button>
+                <Link
+                  href={`/orders/${order.id}/responses`}
+                  className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 text-sm font-medium"
+                >
+                  Просмотреть отклики
+                </Link>
+              </div>
+            )}
+          </div>
         </div>
       ))}
     </div>
