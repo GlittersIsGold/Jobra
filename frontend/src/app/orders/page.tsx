@@ -22,6 +22,7 @@ export default function AllOrdersPage() {
   const [filteredOrders, setFilteredOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [currentUserId, setCurrentUserId] = useState('');
   const router = useRouter();
 
   const [filters, setFilters] = useState<Filters>({
@@ -41,6 +42,21 @@ export default function AllOrdersPage() {
       if (!token) {
         router.push('/login');
         return;
+      }
+
+      try {
+        const userData = localStorage.getItem('user_data');
+        if (userData) {
+          const user = JSON.parse(userData);
+          setCurrentUserId(user.id);
+          console.log('User ID from localStorage:', user.id);
+        } else {
+          const tokenPayload = JSON.parse(atob(token.split('.')[1]));
+          setCurrentUserId(tokenPayload.user_id);
+          console.log('User ID from JWT:', tokenPayload.user_id);
+        }
+      } catch (e) {
+        console.error('Failed to get user ID:', e);
       }
 
       try {
@@ -166,6 +182,7 @@ export default function AllOrdersPage() {
         <OrderList
           orders={filteredOrders}
           showActions={false}
+          currentUserId={currentUserId}
         />
       </div>
     </div>
