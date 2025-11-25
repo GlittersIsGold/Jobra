@@ -7,13 +7,14 @@ import { Order, CreateOrderRequest } from '@/types/order';
 import CreateOrderForm from '@/components/CreateOrderForm';
 import OrderList from '@/components/OrderList';
 
-export default function OrdersPage() {
+export default function MyOrdersPage() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [isCreating, setIsCreating] = useState(false);
   const [loading, setLoading] = useState(true);
   const [createLoading, setCreateLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [currentUserId, setCurrentUserId] = useState('');
   const router = useRouter();
 
   useEffect(() => {
@@ -23,6 +24,16 @@ export default function OrdersPage() {
       if (!token) {
         router.push('/login');
         return;
+      }
+
+      const userData = localStorage.getItem('user_data');
+      if (userData) {
+        try {
+          const user = JSON.parse(userData);
+          setCurrentUserId(user.id);
+        } catch (e) {
+          console.error('Failed to parse user data');
+        }
       }
 
       try {
@@ -138,6 +149,7 @@ export default function OrdersPage() {
           onEdit={handleEditOrder}
           onDelete={handleDeleteOrder}
           showActions={true}
+          currentUserId={currentUserId}
         />
       </div>
     </div>
