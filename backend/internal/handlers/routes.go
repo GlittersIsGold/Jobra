@@ -12,6 +12,7 @@ func SetupRoutes(
 	userHandler *UserHandler, 
 	jwtManager *auth.JWTManager, 
 	orderHandler *OrderHandler,
+	orderUserHandler *OrderUserHandler,
 	) {
 	router.POST("/register", authHandler.Register)
 	router.POST("/login", authHandler.Login)
@@ -35,5 +36,13 @@ func SetupRoutes(
 		protected.GET("/orders/:id", orderHandler.GetOrder)
 		protected.PUT("/orders/:id", orderHandler.UpdateOrder)
 		protected.DELETE("/orders/:id", orderHandler.DeleteOrder)
+
+		// Order to user routes
+		protected.POST("/order-users", orderUserHandler.CreateOrderUser)
+		protected.GET("/order-users", orderUserHandler.GetOrderUsers)
+		protected.GET("/check-order-user", orderUserHandler.CheckOrderUserExists)
+		protected.POST("/assign", orderUserHandler.AssignExecutor)
+		protected.POST("/remove-executor", orderUserHandler.RemoveExecutor)
+		protected.DELETE("/order-users/:orderUserId", orderUserHandler.DeleteOrderUser)
 	}
 }
