@@ -30,3 +30,17 @@ type OrderRepository interface {
     Delete(id string, customerID string) error
     DeleteByID(id string) error
 }
+
+type OrderUserRepository interface {
+	Create(orderUser *models.OrderUser) error
+	FindByID(id string) (*models.OrderUser, error)
+	FindByOrderID(orderID string) ([]*models.OrderUser, error)
+	FindByUserID(userID string) ([]*models.OrderUser, error)
+	FindByOrderAndUser(orderID, userID string) (*models.OrderUser, error)
+	ExistsByOrderAndUser(orderID, userID string) (bool, error)
+	Update(orderUser *models.OrderUser) error
+	Delete(id string) error
+	DeleteByOrderAndUser(orderID, userID string) error
+	AssignExecutor(orderID, userID string) error
+	RemoveExecutor(orderID string) error
+}
