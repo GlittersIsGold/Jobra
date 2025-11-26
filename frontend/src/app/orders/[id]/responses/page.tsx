@@ -14,6 +14,9 @@ export default function OrderResponsesPage() {
   const [error, setError] = useState('');
   const [assigning, setAssigning] = useState<string | null>(null);
   const [removing, setRemoving] = useState(false);
+  const [assigningUser, setAssigningUser] = useState<OrderUser | null>(null);
+  const [showAssignModal, setShowAssignModal] = useState(false);
+  const [showRemoveModal, setShowRemoveModal] = useState(false);
   const params = useParams();
   const router = useRouter();
   const orderId = params.id as string;
@@ -34,8 +37,9 @@ export default function OrderResponsesPage() {
         ]);
         
         setOrder(orderResponse.order);
-        setOrderUsers(orderUsersResponse.order_users);
+        setOrderUsers(orderUsersResponse.order_users || []);
       } catch (err) {
+        console.error('Fetch error:', err);
         setError(err instanceof Error ? err.message : 'Ошибка загрузки данных');
       } finally {
         setLoading(false);
@@ -45,21 +49,27 @@ export default function OrderResponsesPage() {
     fetchData();
   }, [orderId, router]);
 
-  const handleAssignExecutor = async (orderUserId: string) => {
-    if (!confirm('Назначить этого пользователя исполнителем заказа?')) {
-      return;
-    }
+  const handleOpenAssignModal = (orderUser: OrderUser) => {
+    setAssigningUser(orderUser);
+    setShowAssignModal(true);
+  };
 
-    setAssigning(orderUserId);
+  const handleAssignExecutor = async () => {
+    if (!assigningUser) return;
+
+    setAssigning(assigningUser.user_id);
     try {
-      await OrderUserService.assignExecutor(orderId, { order_user_id: orderUserId });
+      await OrderUserService.assignExecutor(orderId, { 
+        user_id: assigningUser.user_id
+      });
       const [orderResponse, orderUsersResponse] = await Promise.all([
         OrderService.getOrder(orderId),
         OrderUserService.getOrderUsers(orderId)
       ]);
       setOrder(orderResponse.order);
-      setOrderUsers(orderUsersResponse.order_users);
-      alert('Исполнитель успешно назначен!');
+      setOrderUsers(orderUsersResponse.order_users || []);
+      setShowAssignModal(false);
+      setAssigningUser(null);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Ошибка назначения исполнителя');
     } finally {
@@ -67,11 +77,11 @@ export default function OrderResponsesPage() {
     }
   };
 
-  const handleRemoveExecutor = async () => {
-    if (!confirm('Отменить назначение исполнителя?')) {
-      return;
-    }
+  const handleOpenRemoveModal = () => {
+    setShowRemoveModal(true);
+  };
 
+  const handleRemoveExecutor = async () => {
     setRemoving(true);
     try {
       await OrderUserService.removeExecutor(orderId);
@@ -80,8 +90,8 @@ export default function OrderResponsesPage() {
         OrderUserService.getOrderUsers(orderId)
       ]);
       setOrder(orderResponse.order);
-      setOrderUsers(orderUsersResponse.order_users);
-      alert('Исполнитель отменен!');
+      setOrderUsers(orderUsersResponse.order_users || []);
+      setShowRemoveModal(false);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Ошибка отмены исполнителя');
     } finally {
@@ -119,6 +129,14 @@ export default function OrderResponsesPage() {
     );
   }
 
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
+        <div className="text-xl text-red-600">{error}</div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gray-100 py-8">
       <div className="max-w-6xl mx-auto px-4">
@@ -144,7 +162,7 @@ export default function OrderResponsesPage() {
             
             <div className="flex items-center justify-between">
               <div className="text-gray-600">
-                <span className="font-semibold">{orderUsers.length}</span> отклик(ов)
+                <span className="font-semibold">{orderUsers?.length || 0}</span> отклик(ов)
                 {order?.executor_id && (
                   <span className="ml-4 text-green-600 font-semibold">
                     ✓ Исполнитель назначен
@@ -154,7 +172,7 @@ export default function OrderResponsesPage() {
               
               {order?.executor_id && (
                 <button
-                  onClick={handleRemoveExecutor}
+                  onClick={handleOpenRemoveModal}
                   disabled={removing}
                   className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 disabled:opacity-50 text-sm"
                 >
@@ -165,7 +183,7 @@ export default function OrderResponsesPage() {
           </div>
         </div>
 
-        {orderUsers.length === 0 ? (
+        {!orderUsers || orderUsers.length === 0 ? (
           <div className="bg-white rounded-lg shadow-md p-8 text-center">
             <p className="text-gray-500 text-lg">Пока нет откликов на этот заказ</p>
             <p className="text-gray-400 mt-2">Отклики появятся здесь, когда пользователи откликнутся на ваш заказ</p>
@@ -211,11 +229,11 @@ export default function OrderResponsesPage() {
                   <div className="flex gap-2">
                     {orderUser.status === 'pending' && !order?.executor_id && (
                       <button
-                        onClick={() => handleAssignExecutor(orderUser.id)}
-                        disabled={assigning === orderUser.id}
+                        onClick={() => handleOpenAssignModal(orderUser)}
+                        disabled={assigning === orderUser.user_id}
                         className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 disabled:opacity-50 text-sm"
                       >
-                        {assigning === orderUser.id ? 'Назначаем...' : 'Назначить исполнителем'}
+                        {assigning === orderUser.user_id ? 'Назначаем...' : 'Назначить исполнителем'}
                       </button>
                     )}
                     
@@ -228,6 +246,92 @@ export default function OrderResponsesPage() {
                 </div>
               </div>
             ))}
+          </div>
+        )}
+
+        {/* Модальное окно назначения исполнителя */}
+        {showAssignModal && assigningUser && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-lg border border-gray-300 shadow-lg w-full max-w-md">
+              <div className="p-6">
+                <h3 className="text-lg font-semibold mb-4">Назначить исполнителя</h3>
+                
+                <div className="mb-6">
+                  <p className="text-gray-700 mb-2">
+                    Вы уверены, что хотите назначить пользователя 
+                    <span className="font-semibold"> {assigningUser.user_username} </span>
+                    исполнителем заказа?
+                  </p>
+                  <p className="text-sm text-gray-500">
+                    Пользователь получит уведомление о назначении и сможет приступить к работе.
+                  </p>
+                </div>
+
+                {error && (
+                  <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded text-sm">
+                    {error}
+                  </div>
+                )}
+
+                <div className="flex justify-end space-x-3">
+                  <button
+                    onClick={() => {
+                      setShowAssignModal(false);
+                      setAssigningUser(null);
+                      setError('');
+                    }}
+                    disabled={assigning !== null}
+                    className="px-4 py-2 text-gray-600 hover:text-gray-800 disabled:opacity-50"
+                  >
+                    Отмена
+                  </button>
+                  <button
+                    onClick={handleAssignExecutor}
+                    disabled={assigning !== null}
+                    className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 disabled:opacity-50"
+                  >
+                    {assigning ? 'Назначаем...' : 'Да, назначить'}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Модальное окно отмены исполнителя */}
+        {showRemoveModal && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-lg border border-gray-300 shadow-lg w-full max-w-md">
+              <div className="p-6">
+                <h3 className="text-lg font-semibold mb-4">Отменить исполнителя</h3>
+                
+                <div className="mb-6">
+                  <p className="text-gray-700 mb-2">
+                    Вы уверены, что хотите отменить назначение исполнителя?
+                  </p>
+                  <p className="text-sm text-gray-500">
+                    Заказ вернется в статус "Активный" и другие пользователи смогут откликаться на него.
+                  </p>
+                </div>
+
+                <div className="flex justify-end space-x-3">
+                  <button
+                    onClick={() => setShowRemoveModal(false)}
+                    disabled={removing}
+                    className="px-4 py-2 text-gray-600 hover:text-gray-800 disabled:opacity-50"
+                  >
+                    Отмена
+                  </button>
+                  <button
+                    onClick={handleRemoveExecutor}
+                    disabled={removing}
+                    className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 disabled:opacity-50"
+                  >
+                    {removing ? 'Отмена...' : 'Да, отменить'}
+                  </button>
+                </div>
+              </div>
+            </div>
           </div>
         )}
       </div>
