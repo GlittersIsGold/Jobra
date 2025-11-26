@@ -15,18 +15,15 @@ export class OrderUserService {
   }
 
   static async createOrderUser(orderId: string, request: CreateOrderUserRequest): Promise<{ message: string; order_user: OrderUser }> {
-    const token = this.getToken(); 
+    const token = this.getToken();
   
-    const response = await fetch(`${API_BASE_URL}/api/order-users`, {
+    const response = await fetch(`${API_BASE_URL}/api/order-users?order_id=${orderId}`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${token}`,
       },
-      body: JSON.stringify({
-        order_id: orderId,
-        ...request
-      }),
+      body: JSON.stringify(request),
     });
   
     if (!response.ok) {
@@ -63,20 +60,27 @@ export class OrderUserService {
     if (!token) {
       throw new Error('Not authenticated');
     }
+  
+    const url = `${API_BASE_URL}/api/check-order-user?order_id=${orderId}`;
+  
+    try {
+      const response = await fetch(url, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
 
-    const response = await fetch(`${API_BASE_URL}/api/check-order-user?order_id=${orderId}`, {
-      method: 'GET',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-      },
-    });
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(`Failed to check order user: ${response.status} - ${errorText}`);
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Failed to check order user: ${response.status} - ${errorText}`);
+      }
+  
+      const result = await response.json();
+      return result;
+    } catch (error) {
+      throw error;
     }
-
-    return response.json();
   }
 
   static async assignExecutor(orderId: string, request: AssignExecutorRequest): Promise<{ message: string; order: any }> {
@@ -84,17 +88,19 @@ export class OrderUserService {
     if (!token) {
       throw new Error('Not authenticated');
     }
-
+  
+    const requestBody = {
+      order_id: orderId,
+      ...request
+    };
+    
     const response = await fetch(`${API_BASE_URL}/api/assign`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${token}`,
       },
-      body: JSON.stringify({
-        order_id: orderId,
-        ...request
-      }),
+      body: JSON.stringify(requestBody),
     });
 
     if (!response.ok) {
@@ -102,7 +108,8 @@ export class OrderUserService {
       throw new Error(`Assignment failed: ${response.status} - ${errorText}`);
     }
 
-    return response.json();
+    const result = await response.json();
+    return result;
   }
 
   static async removeExecutor(orderId: string): Promise<{ message: string; order: any }> {
