@@ -26,8 +26,8 @@ type CreateOrderUserRequest struct {
 }
 
 func (h *OrderUserHandler) CreateOrderUser(c *gin.Context) {
-	orderID := c.Param("id")
-	userID, exists := c.Get("userID")
+	orderID := c.Query("order_id")
+	userID, exists := c.Get("user_id")
 	if !exists {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "User not authenticated"})
 		return
@@ -80,8 +80,8 @@ func (h *OrderUserHandler) CreateOrderUser(c *gin.Context) {
 }
 
 func (h *OrderUserHandler) GetOrderUsers(c *gin.Context) {
-	orderID := c.Param("id")
-	userID, exists := c.Get("userID")
+	orderID := c.Query("order_id")
+	userID, exists := c.Get("user_id")
 	if !exists {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "User not authenticated"})
 		return
@@ -127,7 +127,7 @@ func (h *OrderUserHandler) GetOrderUsers(c *gin.Context) {
 
 func (h *OrderUserHandler) DeleteOrderUser(c *gin.Context) {
 	orderUserID := c.Param("orderUserId")
-	userID, exists := c.Get("userID")
+	userID, exists := c.Get("user_id")
 	if !exists {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "User not authenticated"})
 		return
@@ -142,73 +142,72 @@ func (h *OrderUserHandler) DeleteOrderUser(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "Response deleted successfully"})
 }
 
-type AssignExecutorRequest struct {
-	OrderUserID string `json:"order_user_id" binding:"required"`
-}
+func (h *OrderUserHandler) AssignExecutor(c *gin.Context) {    
+    userID, exists := c.Get("user_id")
+    if !exists {
+        c.JSON(http.StatusUnauthorized, gin.H{"error": "User not authenticated"})
+        return
+    }
 
-func (h *OrderUserHandler) AssignExecutor(c *gin.Context) {
-	orderID := c.Param("id")
-	userID, exists := c.Get("userID")
-	if !exists {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "User not authenticated"})
-		return
-	}
+    var req struct {
+        OrderID string `json:"order_id" binding:"required"`
+        UserID  string `json:"user_id" binding:"required"`
+    }
+    
+    if err := c.ShouldBindJSON(&req); err != nil {
+        c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body: " + err.Error()})
+        return
+    }
+    
+    order, err := h.orderRepo.FindByID(req.OrderID)
+    if err != nil {
+        c.JSON(http.StatusNotFound, gin.H{"error": "Order not found"})
+        return
+    }
 
-	var req AssignExecutorRequest
-	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body"})
-		return
-	}
+    if order.CustomerID != userID.(string) {
+        c.JSON(http.StatusForbidden, gin.H{"error": "Access denied"})
+        return
+    }
 
-	order, err := h.orderRepo.FindByID(orderID)
-	if err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "Order not found"})
-		return
-	}
+    orderUser, err := h.orderUserRepo.GetUserOrderUser(c, req.OrderID, req.UserID)
+    if err != nil {
+        c.JSON(http.StatusNotFound, gin.H{"error": "User has not responded to this order"})
+        return
+    }
 
-	if order.CustomerID != userID.(string) {
-		c.JSON(http.StatusForbidden, gin.H{"error": "Access denied"})
-		return
-	}
+    updatedOrder, err := h.orderUserRepo.AssignOrderExecutor(c, req.UserID, req.OrderID)
+    if err != nil {
+        c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to assign executor"})
+        return
+    }
 
-	orderUser, err := h.orderUserRepo.GetUserOrderUser(c, orderID, userID.(string))
-	if err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "Order user not found"})
-		return
-	}
+    _, err = h.orderUserRepo.UpdateOrderUserStatus(c, orderUser.ID.String(), "accepted")
+    if err != nil {
+        c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update order user status"})
+        return
+    }
 
-	updatedOrder, err := h.orderUserRepo.AssignOrderExecutor(c, orderUser.UserID.String(), orderID)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to assign executor"})
-		return
-	}
-
-	_, err = h.orderUserRepo.UpdateOrderUserStatus(c, req.OrderUserID, "accepted")
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update order user status"})
-		return
-	}
-
-	c.JSON(http.StatusOK, gin.H{
-		"message": "Executor assigned successfully",
-		"order": gin.H{
-			"id":          updatedOrder.ID.String(),
-			"customer_id": updatedOrder.CustomerID.String(),
-			"title":       updatedOrder.Title,
-			"description": updatedOrder.Description,
-			"budget":      getBudgetFloat(updatedOrder.Budget),
-			"category":    updatedOrder.Category,
-			"section":     updatedOrder.Section,
-			"status":      updatedOrder.Status.String,
-			"created_at":  updatedOrder.CreatedAt.Time,
-			"updated_at":  updatedOrder.UpdatedAt.Time,
-		},
-	})
+    c.JSON(http.StatusOK, gin.H{
+        "message": "Executor assigned successfully",
+        "order": gin.H{
+            "id":          updatedOrder.ID.String(),
+            "customer_id": updatedOrder.CustomerID.String(),
+            "title":       updatedOrder.Title,
+            "description": updatedOrder.Description,
+            "budget":      getBudgetFloat(updatedOrder.Budget),
+            "category":    updatedOrder.Category,
+            "section":     updatedOrder.Section,
+            "status":      updatedOrder.Status.String,
+            "created_at":  updatedOrder.CreatedAt.Time,
+            "updated_at":  updatedOrder.UpdatedAt.Time,
+        },
+    })
 }
 
 func (h *OrderUserHandler) RemoveExecutor(c *gin.Context) {
-	orderID := c.Param("id")
-	userID, exists := c.Get("userID")
+	orderID := c.Query("order_id")
+	userID, exists := c.Get("user_id")
 	if !exists {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "User not authenticated"})
 		return
@@ -248,14 +247,19 @@ func (h *OrderUserHandler) RemoveExecutor(c *gin.Context) {
 	})
 }
 
-func (h *OrderUserHandler) CheckOrderUserExists(c *gin.Context) {
-	orderID := c.Param("id")
-	userID, exists := c.Get("userID")
+func (h *OrderUserHandler) CheckOrderUserExists(c *gin.Context) {	
+	userID, exists := c.Get("user_id")	
 	if !exists {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "User not authenticated"})
 		return
 	}
 
+	orderID := c.Query("order_id")	
+	if orderID == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "order_id query parameter is required"})
+		return
+	}
+	
 	hasResponded, err := h.orderUserRepo.CheckOrderUserExists(c, orderID, userID.(string))
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to check response"})

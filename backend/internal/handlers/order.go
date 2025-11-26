@@ -119,20 +119,17 @@ func (h *OrderHandler) UpdateOrder(c *gin.Context) {
 		return
 	}
 
-	// Получаем текущий заказ
 	order, err := h.orderRepo.FindByID(orderID)
 	if err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Order not found"})
 		return
 	}
 
-	// Проверяем, что пользователь является владельцем заказа
 	if order.CustomerID != userID.(string) {
 		c.JSON(http.StatusForbidden, gin.H{"error": "Access denied"})
 		return
 	}
 
-	// Обновляем заказ
 	order.Title = req.Title
 	order.Description = req.Description
 	order.Budget = req.Budget
