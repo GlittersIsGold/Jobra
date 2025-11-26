@@ -17,7 +17,7 @@ export interface CreateOrderUserRequest {
 }
 
 export interface AssignExecutorRequest {
-  order_user_id: string;
+  user_id: string;
 }
 
 export interface OrderWithDetails extends Order {
