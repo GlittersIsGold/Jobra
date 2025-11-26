@@ -49,6 +49,11 @@ export default function OrderResponsesPage() {
     fetchData();
   }, [orderId, router]);
 
+  const handleOpenChat = (userId: string) => {
+    const chatUrl = `/chat/${userId}?order_id=${orderId}`;
+    window.open(chatUrl, '_blank');
+  };
+
   const handleOpenAssignModal = (orderUser: OrderUser) => {
     setAssigningUser(orderUser);
     setShowAssignModal(true);
@@ -226,6 +231,7 @@ export default function OrderResponsesPage() {
                     })}
                   </span>
                   
+                  {/* Внутри блока с кнопками (где кнопка "Назначить исполнителем") */}
                   <div className="flex gap-2">
                     {orderUser.status === 'pending' && !order?.executor_id && (
                       <button
@@ -236,6 +242,14 @@ export default function OrderResponsesPage() {
                         {assigning === orderUser.user_id ? 'Назначаем...' : 'Назначить исполнителем'}
                       </button>
                     )}
+                    
+                    {/* Добавляем кнопку чата */}
+                    <button
+                      onClick={() => handleOpenChat(orderUser.user_id)}
+                      className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 text-sm"
+                    >
+                      💬 Чат
+                    </button>
                     
                     {orderUser.status === 'accepted' && (
                       <span className="px-3 py-1 bg-green-100 text-green-800 rounded-full text-xs font-medium">
@@ -249,9 +263,8 @@ export default function OrderResponsesPage() {
           </div>
         )}
 
-        {/* Модальное окно назначения исполнителя */}
         {showAssignModal && assigningUser && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="fixed inset-0 bg-transparent bg-opacity-50 flex items-center justify-center z-50 p-4">
             <div className="bg-white rounded-lg border border-gray-300 shadow-lg w-full max-w-md">
               <div className="p-6">
                 <h3 className="text-lg font-semibold mb-4">Назначить исполнителя</h3>
