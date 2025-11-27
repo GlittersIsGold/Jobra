@@ -22,27 +22,44 @@ func SetupRoutes(
 
 	protected := router.Group("/api")
 	protected.Use(auth.AuthMiddleware(jwtManager))
+	
+	user := protected.Group("/user")
 	{
-		// User routes
-		protected.GET("/profile", userHandler.GetProfile)
-		protected.GET("/users", userHandler.GetUsers)
-		protected.PUT("/profile", userHandler.UpdateProfile)
-		protected.PUT("/profile/password", userHandler.ChangePassword)
+		user.GET("", userHandler.GetProfile)
+		user.PUT("", userHandler.UpdateProfile)
+		user.PUT("/password", userHandler.ChangePassword)
+	}
 
-		// Order routes
-		protected.GET("/orders", orderHandler.GetUserOrders)
-		protected.GET("/orders/all", orderHandler.GetAllOrders)
-		protected.POST("/orders", orderHandler.CreateOrder)
-		protected.GET("/orders/:id", orderHandler.GetOrder)
-		protected.PUT("/orders/:id", orderHandler.UpdateOrder)
-		protected.DELETE("/orders/:id", orderHandler.DeleteOrder)
+	users := protected.Group("/users")
+	{	 
+		users.GET("", userHandler.GetUsers) 
+	}
+	
+	orders := protected.Group("/orders")
+	{
+		orders.GET("", orderHandler.GetAllOrders)
+		orders.GET("/mine", orderHandler.GetUserOrders)
+		orders.POST("/create", orderHandler.CreateOrder)
 
-		// Order to user routes
-		protected.POST("/order-users", orderUserHandler.CreateOrderUser)
-		protected.GET("/order-users", orderUserHandler.GetOrderUsers)
-		protected.GET("/check-order-user", orderUserHandler.CheckOrderUserExists)
-		protected.POST("/assign", orderUserHandler.AssignExecutor)
-		protected.POST("/remove-executor", orderUserHandler.RemoveExecutor)
-		protected.DELETE("/order-users/:orderUserId", orderUserHandler.DeleteOrderUser)
+		order := orders.Group("/:id")
+		{
+			order.GET("", orderHandler.GetOrder)
+			order.PUT("", orderHandler.UpdateOrder)
+			order.DELETE("", orderHandler.DeleteOrder)
+		}
+
+		users := orders.Group("/users")
+		{
+			users.GET("", orderUserHandler.GetOrderUsers)
+			users.POST("", orderUserHandler.CreateOrderUser)
+			users.DELETE("/:orderUserId", orderUserHandler.DeleteOrderUser)
+			users.GET("/check", orderUserHandler.CheckOrderUserExists)
+
+			assign := users.Group("/assign")
+			{
+				assign.POST("", orderUserHandler.AssignExecutor)
+				assign.DELETE("", orderUserHandler.RemoveExecutor)
+			}
+		}
 	}
 }
