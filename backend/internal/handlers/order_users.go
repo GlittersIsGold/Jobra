@@ -1,7 +1,9 @@
 package handlers
 
 import (
+	"log"
 	"net/http"
+	"time"
 
 	"backend/internal/repository/postgres"
 
@@ -142,67 +144,122 @@ func (h *OrderUserHandler) DeleteOrderUser(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "Response deleted successfully"})
 }
 
-func (h *OrderUserHandler) AssignExecutor(c *gin.Context) {    
-    userID, exists := c.Get("user_id")
+func (h *OrderUserHandler) AssignExecutor(c *gin.Context) {
+    log.Println("=== AssignExecutor handler called ===")
+    log.Printf("Method: %s, Path: %s", c.Request.Method, c.Request.URL.Path)
+    
+    var req struct {
+        OrderID string `json:"order_id"`
+        UserID  string `json:"user_id"`
+    }
+    
+    if err := c.ShouldBindJSON(&req); err != nil {
+        log.Printf("Bind JSON error: %v", err)
+        c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request format: " + err.Error()})
+        return
+    }
+    
+    log.Printf("Request data: order_id=%s, user_id=%s", req.OrderID, req.UserID)
+    
+    // Проверяем, что ID не пустые
+    if req.OrderID == "" {
+        c.JSON(http.StatusBadRequest, gin.H{"error": "order_id is required"})
+        return
+    }
+    
+    if req.UserID == "" {
+        c.JSON(http.StatusBadRequest, gin.H{"error": "user_id is required"})
+        return
+    }
+    
+    // Проверяем существование заказа
+    order, err := h.orderRepo.FindByID(req.OrderID)
+    if err != nil {
+        log.Printf("Order not found error: %v", err)
+        c.JSON(http.StatusNotFound, gin.H{"error": "Order not found with id: " + req.OrderID})
+        return
+    }
+    
+    log.Printf("Found order: ID=%s, CustomerID=%s", order.ID, order.CustomerID)
+    
+    // Проверяем аутентификацию пользователя
+    authUserID, exists := c.Get("user_id")
     if !exists {
         c.JSON(http.StatusUnauthorized, gin.H{"error": "User not authenticated"})
         return
     }
-
-    var req struct {
-        OrderID string `json:"order_id" binding:"required"`
-        UserID  string `json:"user_id" binding:"required"`
+    
+    log.Printf("Authenticated user ID: %s", authUserID.(string))
+    
+    if order.CustomerID != authUserID.(string) {
+        log.Printf("Permission denied: order customer %s != authenticated user %s", 
+            order.CustomerID, authUserID.(string))
+        c.JSON(http.StatusForbidden, gin.H{"error": "Only order owner can assign executor"})
+        return
     }
     
-    if err := c.ShouldBindJSON(&req); err != nil {
-        c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body: " + err.Error()})
+    if req.UserID == authUserID.(string) {
+        c.JSON(http.StatusBadRequest, gin.H{"error": "Cannot assign yourself as executor"})
         return
     }
     
-    order, err := h.orderRepo.FindByID(req.OrderID)
+    hasResponded, err := h.orderUserRepo.CheckOrderUserExists(c, req.OrderID, req.UserID)
     if err != nil {
-        c.JSON(http.StatusNotFound, gin.H{"error": "Order not found"})
+        log.Printf("Error checking order user: %v", err)
+        c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to check response"})
         return
     }
-
-    if order.CustomerID != userID.(string) {
-        c.JSON(http.StatusForbidden, gin.H{"error": "Access denied"})
+    
+    if !hasResponded {
+        c.JSON(http.StatusBadRequest, gin.H{"error": "User has not responded to this order"})
         return
     }
-
-    orderUser, err := h.orderUserRepo.GetUserOrderUser(c, req.OrderID, req.UserID)
-    if err != nil {
-        c.JSON(http.StatusNotFound, gin.H{"error": "User has not responded to this order"})
-        return
-    }
-
+    
     updatedOrder, err := h.orderUserRepo.AssignOrderExecutor(c, req.UserID, req.OrderID)
     if err != nil {
-        c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to assign executor"})
+        log.Printf("AssignOrderExecutor error: %v", err)
+        if err.Error() == "no rows in result set" {
+            c.JSON(http.StatusNotFound, gin.H{"error": "Order not found or cannot be updated"})
+        } else {
+            c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to assign executor: " + err.Error()})
+        }
         return
     }
-
-    _, err = h.orderUserRepo.UpdateOrderUserStatus(c, orderUser.ID.String(), "accepted")
-    if err != nil {
-        c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update order user status"})
-        return
-    }
-
+    
+    log.Printf("Successfully assigned executor. Updated order ID: %s", updatedOrder.ID.String())
+    
+    
     c.JSON(http.StatusOK, gin.H{
         "message": "Executor assigned successfully",
         "order": gin.H{
-            "id":          updatedOrder.ID.String(),
-            "customer_id": updatedOrder.CustomerID.String(),
-            "title":       updatedOrder.Title,
-            "description": updatedOrder.Description,
-            "budget":      getBudgetFloat(updatedOrder.Budget),
-            "category":    updatedOrder.Category,
-            "section":     updatedOrder.Section,
-            "status":      updatedOrder.Status.String,
-            "created_at":  updatedOrder.CreatedAt.Time,
-            "updated_at":  updatedOrder.UpdatedAt.Time,
+            "id":                    updatedOrder.ID.String(),
+            "customer_id":           updatedOrder.CustomerID.String(),
+            "executor_id":           updatedOrder.ExecutorID.String(),
+            "title":                 updatedOrder.Title,
+            "description":           updatedOrder.Description,
+            "budget":                getBudgetFloat(updatedOrder.Budget),
+            "category":              updatedOrder.Category,
+            "section":               updatedOrder.Section,
+            "status":                updatedOrder.Status.String,
+            "executor_assigned_at":  getNullableTime(updatedOrder.ExecutorAssignedAt),
+            "created_at":            updatedOrder.CreatedAt.Time,
+            "updated_at":            updatedOrder.UpdatedAt.Time,
         },
     })
+}
+
+func getNullableString(s pgtype.Text) *string {
+    if s.Valid {
+        return &s.String
+    }
+    return nil
+}
+
+func getNullableTime(t pgtype.Timestamptz) *time.Time {
+    if t.Valid {
+        return &t.Time
+    }
+    return nil
 }
 
 func (h *OrderUserHandler) RemoveExecutor(c *gin.Context) {
