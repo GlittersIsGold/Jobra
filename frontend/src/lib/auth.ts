@@ -48,7 +48,7 @@ export class AuthService {
   }
 
   static async getProfile(token: string): Promise<{ user: User }> {
-    const response = await fetch(`${API_BASE_URL}/api/profile`, {
+    const response = await fetch(`${API_BASE_URL}/api/user`, {
       method: 'GET',
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -68,7 +68,7 @@ export class AuthService {
       throw new Error('Not authenticated');
     }
 
-    const response = await fetch(`${API_BASE_URL}/api/profile`, {
+    const response = await fetch(`${API_BASE_URL}/api/user`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
@@ -91,7 +91,7 @@ export class AuthService {
       throw new Error('Not authenticated');
     }
 
-    const response = await fetch(`${API_BASE_URL}/api/profile/password`, {
+    const response = await fetch(`${API_BASE_URL}/api/user/password`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',

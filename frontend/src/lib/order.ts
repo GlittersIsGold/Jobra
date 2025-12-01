@@ -9,7 +9,7 @@ export class OrderService {
       throw new Error('Not authenticated');
     }
 
-    const response = await fetch(`${API_BASE_URL}/api/orders`, {
+    const response = await fetch(`${API_BASE_URL}/api/orders/create`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -53,7 +53,7 @@ export class OrderService {
       throw new Error('Not authenticated');
     }
 
-    const response = await fetch(`${API_BASE_URL}/api/orders/all`, {
+    const response = await fetch(`${API_BASE_URL}/api/orders`, {
       method: 'GET',
       headers: {
         'Authorization': `Bearer ${token}`,
